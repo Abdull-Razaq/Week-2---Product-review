@@ -10,12 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_07_18_144445) do
+ActiveRecord::Schema.define(version: 2023_03_01_090801) do
 
-  create_table "spells", force: :cascade do |t|
+  create_table "products", force: :cascade do |t|
     t.string "name"
-    t.integer "level"
-    t.string "description"
+    t.integer "price"
+  end
+
+  create_table "reviews", force: :cascade do |t|
+    t.integer "star_rating"
+    t.string "comment"
+    t.integer "product_id"
+    t.integer "user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "name"
   end
 
 end

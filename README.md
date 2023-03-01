@@ -1,217 +1,96 @@
-# Bonus: Seeding from an API
+### Author 
+**ABDIRIZAK MOHAMED**
 
-## Learning Goals
+## ERD 
+source = ./assets/erd_img.png
 
-- Use a web API to seed a database with realistic data
+For this assignment, we'll be working with an e-commerce domain. We'll be focusing on the product reviews.
 
-## Introduction
+We have three models: User, Review, and Product.
 
-In the last lesson, we learned the importance of having seed data in our
-database. We also learned how to generate randomized data using Faker. Sometimes
-though, it's preferable to have more realistic data to work with. We could
-create that data by hand, but there's also a whole lot of structured data out
-there on the internet for us to use.
+For our purposes;
+ *A Product has many Users, a User has many Products*
+ *A Review belongs to a User and to a Product.*
 
-One other way to get more realistic data into our database is to seed data from
-a **JSON API**. There are many public JSON APIs out there that you can use to
-access data that other developers have put together on a variety of topics. This
-[Public APIs][public apis] repository has a great curated list broken down by
-category, so depending on what kind of data you're looking for, you may be able
-to find an API here.
+  *Product - User is a many-to-many relationship.*
 
-For our application, we'll be using the [Dungeons and Dragons API][dnd api] as
-an example. This API doesn't require any authorization (no API key is required),
-so it's easy to set up.
+Topics
+This assignment focused on the following topics
 
-In this application, we have a migration for one table, `spells`:
+  ## Active Record Migrations
+  ## Active Record Associations
+  ## Class and Instance Methods
+  ## Active Record QueryingProject Setup
 
-```rb
-# db/migrate/20210718144445_create_spells.rb
-class CreateSpells < ActiveRecord::Migration[6.1]
-  def change
-    create_table :spells do |t|
-      t.string :name
-      t.integer :level
-      t.string :description
-    end
-  end
-end
-```
+### DELIVERABLES
+Create the following classes and their respective methods.
 
-And a corresponding `Spell` class that inherits from Active Record:
+Set up your application so it runs from a configured run file. 
 
-```rb
-# app/models/spell
-class Spell < ActiveRecord::Base
+Create instances of the classes on the run file and try out the methods you just created.
 
-end
-```
+Use the notation # for instance methods, and .(dot) for class methods.
 
-This lesson is set up as a code-along, so make sure to fork and clone the
-lesson. Then run these commands to set up the dependencies and set up the
-database:
+Feel free to build out any helper methods if needed.
 
-```console
-$ bundle install
-$ bundle exec rake db:migrate
-```
+### Migrations
 
-## Working with JSON APIs
+Before working on the rest of the deliverables, you will need to create a migration for the reviews table.
 
-The first step in working with an API is to understand what **endpoints** it has
-available, and how the **response** is structured. For our purposes, we'll be
-using the [spells endpoint][] from the [Dungeons and Dragons API][dnd api] to
-generate data for a `spells` table in our database.
+ 
+  A Review belongs to a Product, and a Review also belongs to a User. In your migration, create any columns your reviews table will need to establish these relationships.
+  The reviews table should also have:
+  *A star_rating column that stores an integer.*
+  *A comment column that stores a string.*
+ 
+After creating and running your migration, create your Review class, and use the seeds.rb file to create Review instances so you can test your code.
 
-Based on their documentation, we can see a list of all the spells at this
-endpoint: [https://www.dnd5eapi.co/api/spells][spells index], and making a
-request to the endpoint for one single spell, like
-[https://www.dnd5eapi.co/api/spells/acid-arrow][spells show], will return a JSON
-object formatted like this:
+### Object Association Methods
 
-```json
-{
-  "index": "acid-arrow",
-  "name": "Acid Arrow",
-  "desc": [
-    "A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 acid damage immediately and 2d4 acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage and no damage at the end of its next turn."
-  ],
-  "higher_level": [
-    "When you cast this spell using a spell slot of 3rd level or higher, the damage (both initial and later) increases by 1d4 for each slot level above 2nd."
-  ],
-  "range": "90 feet",
-  "components": ["V", "S", "M"],
-  "material": "Powdered rhubarb leaf and an adder's stomach.",
-  "ritual": false,
-  "duration": "Instantaneous",
-  "concentration": false,
-  "casting_time": "1 action",
-  "level": 2,
-  "attack_type": "ranged"
-}
-```
+Use Active Record association macros and Active Record query methods where appropriate (i.e. has_many, has_many through, and belongs_to).
 
-[spells index]: https://www.dnd5eapi.co/api/spells
-[spells show]: https://www.dnd5eapi.co/api/spells/acid-arrow
+ 
 
-So in order to seed our database from this API, we'll need to use Ruby to:
+## Review
+Returns the User instance for this Review
+Returns the Product instance for this Review
+  *Review#user*
+  *Review#product*
 
-- Make a request to the spells endpoint for the API
-- Parse the JSON response into a Ruby hash
-- Find the data in that hash that we want to save to our database
-- Use Active Record to save the data to the database
+## Product
+  Product#reviews
+Returns a collection of all the Reviews for the Product
+  Product#users
+Returns a collection of all the Users who reviewed the Product
+ 
 
-### Using Rest Client to Interact with APIs
+## User
+  User#reviews
+Returns a collection of all the Reviews that the User has given
+  User#products
+Returns a collection of all the Products that the User has reviewed
+ 
 
-To make the request to the API in Ruby, we'll use the
-[Rest Client][rest-client] gem. This library simplifies the process of making
-network requests in Ruby. We've already got this gem in our Gemfile, so let's
-experiment with it in our `rake console`:
+Use the rake console and check that these methods work before proceeding. For example, you should be able to call User.first.products and see a list of the products for the first user in the database based on your seed data, and Review.first.user should return the user for the first review in the database.
 
-```rb
-response = RestClient.get "https://www.dnd5eapi.co/api/spells/acid-arrow"
-# => <RestClient::Response 200 "{\"index\":\"a...">
 
-spell_hash = JSON.parse(response)
-# => {"index"=>"acid-arrow",
-#  "name"=>"Acid Arrow",
-#  "desc"=>
-#   ["A shimmering green arrow streaks toward a target within range and bursts in a spray of acid. Make a ranged spell attack against the target. On a hit, the target takes 4d4 acid damage immediately and 2d4 acid damage at the end of its next turn. On a miss, the arrow splashes the target with acid for half as much of the initial damage and no damage at the end of its next turn."], ...
-
-spell_hash["name"]
-# => "Acid Arrow"
-
-spell_hash.keys
-# spell_hash
-# => ["index",
-#  "name",
-#  "desc",
-#  "higher_level",
-#  "range",
-#  "components",
-#  "material", ...
-```
-
-Awesome! With just a couple lines of code, we were able to make a GET request to
-the API and parse the response into a Ruby hash.
-
-The process of using the Rest Client gem in Ruby should feel similar to using
-`fetch` in JavaScript: we make a request using a URL and HTTP verb, which
-returns a response object; to work with the response object, we parse it from a
-JSON string to a Ruby hash. One key difference is that this code happens
-_synchronously_ in Ruby rather than _asynchronously_. Our program has to wait
-for the response before running the next line of code.
-
-Once we have the response data as a Ruby hash, we can interact with it like we
-would with any other Ruby hash, and access data using bracket notation.
-
-### Using Rest Client from the Seed File
-
-Now that we know how to access the data we need, let's write some Ruby code in
-the `seeds.rb` file that will communicate with the API and persist data to our
-database. Add this code to the `seeds.rb` file:
-
-```rb
-puts "Seeding spells..."
-# these are the spells we want to add to the database
-spells = ["acid-arrow", "animal-messenger", "calm-emotions", "charm-person"]
-
-# iterate over each spell
-spells.each do |spell|
-  # make a request to the endpoint for the individual spell:
-  response = RestClient.get "https://www.dnd5eapi.co/api/spells/#{spell}"
-
-  # the response will come back as a JSON-formatted string.
-  # use JSON.parse to convert this string to a Ruby hash:
-  spell_hash = JSON.parse(response)
-
-  # create a spell in the database using the data from this hash:
-  Spell.create(
-    name: spell_hash["name"],
-    level: spell_hash["level"],
-    description: spell_hash["desc"][0] # spell_hash["desc"] returns an array, so we need to access the first index to get just a string of the description
-  )
-end
-
-puts "Done seeding!"
-```
-
-As you can see, we're making requests for several different spells from the API,
-and using the response to create new records in our `spells` table with Active
-Record.
-
-Working with this JSON API and (many others) mean you need to be comfortable
-working with Ruby hashes and arrays, since many API developers will structure
-their data as nested hashes and arrays. If you're ever unsure how to get the
-data out of the response, try using `binding.pry` and experiment in the console.
-
-Now that we've got the new code in the `seeds.rb` file, we can run it:
-
-```console
-$ bundle exec rake db:seed
-```
-
-And enter `rake console` to explore the new data:
-
-```rb
-Spell.last
-# => #<Spell:0x00007fee74b38138
-#  id: 4,
-#  name: "Charm Person",
-#  level: 1,
-#  description:
-#   "You attempt to charm a humanoid you can see within range. It must make a wisdom saving throw, and does so with advantage if you or your companions are fighting it. If it fails the saving throw, it is charmed by you until the spell ends or until you or your companions do anything harmful to it. The charmed creature regards you as a friendly acquaintance. When the spell ends, the creature knows it was charmed by you.">
-```
-
-Success! We've taken the data from the API and used it to populate our database.
-Run `learn test` now to pass the test and complete this lesson.
-
-## Resources
-
-- [Rest Client][rest-client]
-- [Public APIs][public apis]
-
-[rest-client]: https://github.com/rest-client/rest-client
-[public apis]: https://github.com/public-apis/public-apis
-[dnd api]: http://www.dnd5eapi.co/docs/#intro
-[spells endpoint]: http://www.dnd5eapi.co/docs/#spell-section
+### Aggregate and Association Methods
+## Review
+  Review#print_review
+This should puts in the terminal a string formatted as follows: Review for {insert product name} by {insert user name}: {insert review star_rating}. {insert review comment}
+ 
+## Product
+  Product#leave_review(user, star_rating, comment)
+Takes a User (an instance of the User class), a star_rating (integer), and a comment (string) as arguments, and creates a new Review in the database associated with this Product and the User
+  Product#print_all_reviews
+This should puts in the terminal a string representing each review for this product
+Each review should be formatted as follows: Review for {insert product name} by {insert user name}: {insert review star_rating}. {insert review comment}
+  Product#average_rating
+Returns a float representing the average star rating for all reviews for this product
+ 
+## User
+  User#favorite_product
+Returns the product instance that has the highest star rating from this user
+  User#remove_reviews(product)
+Takes a Product (an instance of the Product class) and removes all of this user's reviews for that product.
+You will have to delete any rows from the reviews table associated with this user and the product.
